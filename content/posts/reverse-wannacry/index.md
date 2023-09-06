@@ -1,7 +1,7 @@
 ---
-title: "Reverse wannacry"
-date: 2023-06-25T18:44:16+02:00
-draft: true
+title: "Analyse statique de Wannacry (dropper)"
+date: 2023-09-05T10:00:00+02:00
+draft: false
 toc: false
 images:
 tags:
@@ -10,9 +10,23 @@ tags:
   - wannacry
 ---
 
-Pas de fonction main mais une fonction entry dans la liste des fonctions de ghidra
+## Introduction
 
-![Image de la fonction entry](fonction_entry.png)
+Je voulais me mettre à l'analyse de malware et pour cela je voulais en prendre un populaire: Wannacry.
+
+Néanmoins, presque tous les blogs qui couvrent la rétro-ingénierie de ce ransomware s'arrêtent à l'url kill switch qui est au début du malware, sans aller plus loin.
+J'ai donc décidé d'entreprendre la rétro-ingénierie du dropper de Wannacry en essayant d'écrire tout ce que je fais, tout ce que je trouve et tout ce que je déduis.
+Il y a donc beaucoup de répétitions surtout au niveau des signatures des fonctions.
+
+Si vous souhaitez suivre en lisant ce post, le dropper a comme sha256 `24d004a104d4d54034dbcffc2a4b19a11f39008a575aa614ea04703480b1022c`, de mon côté je l'ai trouvé sur [Malware Bazaar](https://bazaar.abuse.ch/sample/24d004a104d4d54034dbcffc2a4b19a11f39008a575aa614ea04703480b1022c/)
+
+Aussi, sachez que je me suis aider, surtout au début, de [la première vidéo de Ghidra Ninja sur la rétro-ingénierie de ce malware](https://www.youtube.com/watch?v=Sv8yu12y5zM&themeRefresh=1 " Reversing WannaCry Part 1 - Finding the killswitch and unpacking the malware in #Ghidra").
+
+## La fonction entry
+
+Il n'y a pas de fonction main mais une fonction entry dans la liste des fonctions de ghidra:
+
+![fonction_entry.png](fonction_entry.png)
 
 La fonction entry ressemble à ceci, seul la dernière ligne est essentielle car c'est la fonction main qui s'appelle `FUN_00408140()` mais qui sera renommée dans l'avenir en `wWinMain()` car c'est comme cela que s'appelle [le point d'entrée des applications en C++](https://learn.microsoft.com/fr-fr/windows/win32/learnwin32/winmain--the-application-entry-point "WinMain : point d’entrée de l’application").
 
@@ -98,6 +112,8 @@ Aussi, j'en profite pour ajouter à cette fonction `wWinMain()` ses paramètres 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow);
 ```
 
+## La fonction vWinMain
+
 Ensuite, la fonction `wWinMain()` est la suivante:
 
 ```C
@@ -152,7 +168,7 @@ undefined4 WinMain(void)
 }
 ```
 
-Ici, on trouve l'url "http://www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea\[.\]com" qui est l'url kill switch découverte par Marcus et qui a permit d'arrêter la propagation du ransomware en achetant ce nom de domaine.
+Ici, on trouve l'url "hxxp://www.iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea\[.\]com" qui est l'url kill switch découverte par Marcus Hutchins et qui a permis d'arrêter la propagation du ransomware en achetant ce nom de domaine.
 
 Dans cette fonction, je trouve aussi les fonctions `InternetOpenA`, `InternetOpenUrlA` et `InternetCloseHandle`. Auxquelles je mets à jour leurs signatures pour y voir un peu plus clair.
 
@@ -189,7 +205,9 @@ BOOL InternetCloseHandle(
 );
 ```
 
-Néanmoins, HINTERNET n'est pas un type de données conventionnel, je dois donc l'ajouter manuellement et je lui attribue le type `void *` . Pour être franc, je ne sais pas pourquoi il faut lui attribuer ce type.
+Néanmoins, HINTERNET n'est pas un type de données conventionnel, je dois donc l'ajouter manuellement et je lui attribue le type `void *` . Pour être franc, je ne sais pas pourquoi il faut lui attribuer ce type. Après avoir fait quelques recherches, d'après [cette documentation](https://learn.microsoft.com/fr-fr/windows/win32/winprog/windows-data-types "Documentation Microsoft - Windows data types"), les LPVOID sont utilisés "vers n’importe quel type".
+
+## La création du service mssecsvc2.0
 
 Maintenant la fonction `FUN_00408090()`:
 
@@ -227,3 +245,58 @@ void FUN_00408090(void)
   return;
 }
 ```
+
+Ici, on voit que le ransomware récupère le nombre d’arguments grâce à `__p___argc()` ([documentation](https://learn.microsoft.com/fr-fr/cpp/c-runtime-library/argc-argv-wargv?view=msvc-170)) et si il y a moins de deux alors il rentre dans `FUN_00407f20`.
+
+Et surtout il va créer un service, on peut le voir grâce à `OpenSCManagerA` et `OpenServiceA`, il pourrait juste interagir avec un service existant néanmoins j'ai vu les fonctions `CreateServiceA` et `StartServiceA` dans `FUN_00407f20` et c'est grâce à l'appel à ses deux fonctions que j'ai déduis qu'il crée et non qu'il interagit avec un service existant 😉.
+
+Le nouveau service s'appelle `mssecsvc2.0` et a comme description `Microsoft Security Center (2.0) Service`:
+
+![service.png](service.png)
+
+Ensuite, il est configuré toujours dans `FUN_00407f20` :
+
+```C
+hService = CreateServiceA(hSCManager,s_mssecsvc2.0_004312fc,
+                           s_Microsoft_Security_Center_(2.0)_S_00431308,0xf01ff,0x10,2,1,
+                           cheminVersBinaire,0x0,0x0,0x0,0x0,0x0);
+```
+
+Cette fois-ci, je ne mets pas toute la fonction car ça ne va pas être utile. Donc, on peut voir les paramètres du nouveau service:
+
+- il a comme accès 0xf01ff soit [SERVICE\_ALL\_ACCESS](https://learn.microsoft.com/fr-fr/windows/win32/services/service-security-and-access-rights) (donc un accès total),
+- le type du service 0x10 soit SERVICE\_WIN32\_OWN_PROCESS, c'est donc un "[service qui s’exécute dans son propre processus](https://learn.microsoft.com/fr-fr/windows/win32/api/winsvc/nf-winsvc-createservicea)",
+- l'option de démarrage qui est 2 soit SERVICE\_AUTO\_START,
+- ce qu'il faut faire si le service ne démarre pas, ici c'est 1 soit SERVICE\_ERROR\_NORMAL ce qui signifie qu'il enregistre l'erreur dans le journal d’événements,
+- on lui donne aussi un chemin vers un binaire mais ça je ne l'ai pas trouvé,
+- 0x0 -> il ne fait pas partit d'un groupe,
+- 0x0 -> pas de modification de la balise existante (je ne suis pas sûr de ce que ça signifie),
+- 0x0 -> il n'y a pas de services qui doivent démarrer avant celui-ci,
+- 0x0 -> Utilise le compte LocalSystem pour exécuter le service,
+- 0x0 -> le mot de passe du compte spécifié , ici LocalSystem, il n'en a pas.
+
+Ensuite, si la création se fait sans erreur, le service est lancé grâce à `StartServiceA` (toujours dans `FUN_00407f20`):
+
+```C
+if (hService != 0x0) {
+    StartServiceA(hService,0,0x0);
+    CloseServiceHandle(hService);
+}
+```
+
+Après la création du service, il y a une autre fonction qui se nomme `FUN_00407ce0` et qui est beaucoup trop grande pour que je la copie ici et je ne suis vraiment pas sûr de ce qu'elle fait. Néanmoins, je peux en extraire deux chemins (enfin ça y ressemble):
+
+- "C:\\%s\\qeriuwjhrf"
+- "C:\\%s\\%s"
+
+Aussi, des fichiers y sont déplacés:
+
+```C
+MoveFileExA(&cStack_208,&cStack_104,1)
+```
+
+Et c'est à peut prêt tout !
+
+## Conclusion
+
+On a vu ce que faisait ce dropper: il vérifie une URL, si l'URL n'est pas atteignable alors il va créer le service `mssecsvc2.0` qui va *surement* télécharger le ransomware.
