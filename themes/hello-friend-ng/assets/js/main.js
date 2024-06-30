@@ -26,7 +26,7 @@ function detectOSColorTheme() {
 // Switch the theme.
 function switchTheme(e) {
   if (chosenThemeIsDark) {
-    localStorage.setItem("theme", "light");
+    localStorage.setItem("theme", "dark");
   } else {
     localStorage.setItem("theme", "dark");
   }
@@ -42,7 +42,7 @@ if (themeToggle) {
     .matchMedia("(prefers-color-scheme: dark)")
     .addEventListener("change", (e) => e.matches && detectOSColorTheme());
   window
-    .matchMedia("(prefers-color-scheme: light)")
+    .matchMedia("(prefers-color-scheme: dark)")
     .addEventListener("change", (e) => e.matches && detectOSColorTheme());
 
   detectOSColorTheme();
