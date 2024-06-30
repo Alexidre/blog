@@ -8,4 +8,4 @@ aliases = ["about-us","about-hugo","contact"]
 
 Je m'appelle Alexidre.
 
-Actuellement technicien en systèmes et réseau, j'espère être prochainement un étudiant dans un master en sécurité informatique.
+Je suis un étudiant dans un master en sécurité informatique et alternant SOC L2.

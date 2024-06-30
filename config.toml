@@ -1,5 +1,5 @@
 baseurl      = "https://alexidre.github.io/"
-title        = "Alexidre - Blog d'analyse de malware"
+title        = "Alexidre - analyse de malware et rétro-ingénierie"
 languageCode = "fr-FR"
 theme        = "hello-friend-ng"
 paginate     = 10
@@ -11,7 +11,7 @@ paginate     = 10
   dateformNumTime = "2006-01-02 15:04"
 
   # Subtitle for home
-  homeSubtitle = "Blog d'un futur alternant analyste SOC"
+  homeSubtitle = "Blog d'un alternant analyste SOC"
 
   # Set disableReadOtherPosts to true in order to hide the links to other posts.
   disableReadOtherPosts = false
@@ -20,7 +20,7 @@ paginate     = 10
   enableSharingButtons = false
 
   # Metadata mostly used in document's head
-  description = "Blog d'un futur alternant analyste SOC"
+  description = "Blog d'un alternant analyste SOC"
   keywords = "homepage, blog, malware, french"
   images = [""]
 
