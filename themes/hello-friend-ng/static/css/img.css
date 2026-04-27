@@ -1,0 +1,17 @@
+.post figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.post figure figcaption,
+.post figure figcaption p {
+  text-align: center;
+}
+
+.post table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+  white-space: nowrap;
+}
