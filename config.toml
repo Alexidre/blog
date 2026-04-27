@@ -11,7 +11,7 @@ pagination.pagerSize     = 10
   dateformNumTime = "2006-01-02 15:04"
   author = ["Alexidre"]
 
-  customCSS = ['/img.css']
+  customCSS = ['/blog/img.css']
 
   # Subtitle for home
   homeSubtitle = "Blog d'un chômeur junior en recherche d'un emploi dans la cyber"
