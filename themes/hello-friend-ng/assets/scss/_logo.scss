@@ -16,13 +16,14 @@
 
   &__text {
     font-size: 1.125rem;
+    white-space: nowrap;
   }
 
   &__cursor {
     display: inline-block;
     width: 10px;
     height: 1rem;
-    background: #a9a9b3;
+    background: #fe5186;
     margin-left: 5px;
     border-radius: 1px;
     animation: cursor 1s infinite;

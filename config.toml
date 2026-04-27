@@ -2,14 +2,14 @@ baseurl      = "https://alexidre.github.io/"
 title        = "Alexidre - analyse de malware et rétro-ingénierie"
 languageCode = "fr-FR"
 theme        = "hello-friend-ng"
-paginate     = 10
+pagination.pagerSize     = 10
 
 [params]
   dateform        = "Jan 2, 2006"
   dateformShort   = "Jan 2"
   dateformNum     = "2006-01-02"
   dateformNumTime = "2006-01-02 15:04"
-  author = "Alexidre"
+  author = ["Alexidre"]
 
   # Subtitle for home
   homeSubtitle = "Blog d'un chômeur junior en recherche d'un emploi dans la cyber"
@@ -19,6 +19,9 @@ paginate     = 10
 
   # Enable sharing buttons, if you like
   enableSharingButtons = false
+
+  # Show a global language switcher in the navigation bar
+  enableGlobalLanguageMenu = false
 
   # Metadata mostly used in document's head
   description = "Blog d'un chômeur junior en recherche d'un emploi dans la cyber"
@@ -51,7 +54,7 @@ paginate     = 10
     copyright = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
     readOtherPosts = "Read other posts"
 
-    [languages.en.params.logo]
+    [languages.fr.params.logo]
       logoText = "Accueil"
       logoHomeLink = "/blog/"
     # or
@@ -69,7 +72,7 @@ paginate     = 10
     identifier = "about"
     name       = "A propos"
     url        = "about/"
-	weight     = 2
+	weight     = 0
  
 [caches]
   [caches.images]

@@ -15,20 +15,26 @@ function detectOSColorTheme() {
   if (chosenThemeIsDark) {
     document.documentElement.setAttribute("data-theme", "dark");
   } else if (chosenThemeIsLight) {
-    document.documentElement.setAttribute("data-theme", "dark");
+    document.documentElement.setAttribute("data-theme", "light");
   } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
     document.documentElement.setAttribute("data-theme", "dark");
   } else {
-    document.documentElement.setAttribute("data-theme", "dark");
+    document.documentElement.setAttribute("data-theme", "light");
   }
 }
 
 // Switch the theme.
 function switchTheme(e) {
   if (chosenThemeIsDark) {
+    localStorage.setItem("theme", "light");
+  } else if (chosenThemeIsLight) {
     localStorage.setItem("theme", "dark");
   } else {
-    localStorage.setItem("theme", "dark");
+    if (document.documentElement.getAttribute("data-theme") == "dark") {
+      localStorage.setItem("theme", "light");
+    } else {
+      localStorage.setItem("theme", "dark");
+    }
   }
 
   detectOSColorTheme();
@@ -42,7 +48,7 @@ if (themeToggle) {
     .matchMedia("(prefers-color-scheme: dark)")
     .addEventListener("change", (e) => e.matches && detectOSColorTheme());
   window
-    .matchMedia("(prefers-color-scheme: dark)")
+    .matchMedia("(prefers-color-scheme: light)")
     .addEventListener("change", (e) => e.matches && detectOSColorTheme());
 
   detectOSColorTheme();
